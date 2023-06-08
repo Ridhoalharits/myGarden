@@ -17,11 +17,11 @@
 
 //inisialisasi sensor
 #include "DHT.h"
-#define DHTPIN 21
-#define DHTTYPE DHT22
+#define DHTPIN 23
+#define DHTTYPE DHT11
 #define sensor_pin 35
-const int trig = 9;
-const int echo = 10;
+const int trig = 21;
+const int echo = 19;
 
 long duration;
 int distance;
@@ -30,8 +30,11 @@ int distance;
 //inisialisasi aktuator
 #define pump 32
 
-#define WIFI_SSID "POCO X3 NFC"
-#define WIFI_PASSWORD "hime1382"
+#define WIFI_SSID "Lantai 2"
+#define WIFI_PASSWORD "697310082"
+
+// #define WIFI_SSID "EIRRG H118"
+// #define WIFI_PASSWORD "modaldong"
 
 
 #define API_KEY "AIzaSyBAB7k2rxsxoANDh4JQS17NvYb5-i4w8KY"
@@ -95,8 +98,6 @@ void setup()
 
 void loop()
 {
-
-
   if (Firebase.ready() && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0))
   {
    int x = random(1,100);
@@ -107,30 +108,6 @@ void loop()
   baca = (analogRead(sensor_pin)/40);
   int lembab = 102-(baca);
 
-  int LEDStatus = Firebase.getInt(fbdo,"/monitor/data/GarageLED");
-  Serial.println(LEDStatus);
-
-
-  if (lembab < 30){
-    digitalWrite(pump,HIGH);
-    Firebase.setString(fbdo,"/monitor/data/status_pompa","ON");
-    Firebase.setInt(fbdo,"/monitor/data/Kelembaban",lembab);
-    Firebase.setInt(fbdo,"/monitor/data/Suhu",t);
-    Firebase.setInt(fbdo,"/monitor/data/Udara",h);
-    Serial.println(lembab);
-  }else{
-    digitalWrite(pump,LOW);
-        Firebase.setString(fbdo,"/monitor/data/status_pompa","OFF");
-    Firebase.setInt(fbdo,"/monitor/data/Kelembaban",lembab);
-    Firebase.setInt(fbdo,"/monitor/data/Suhu",t);
-    Firebase.setInt(fbdo,"/monitor/data/Udara",h);
-    Serial.println(lembab);
-
-  }
-  }
-}
-
-int ultrasonic(){
   digitalWrite(trig, LOW); 
   delayMicroseconds(2);
   // Sets the trigPin on HIGH state for 10 micro seconds
@@ -139,5 +116,28 @@ int ultrasonic(){
   digitalWrite(trig, LOW);
   duration = pulseIn(echo, HIGH); // Reads the echoPin, returns the sound wave travel time in microseconds
   distance= duration*0.034/2;
-  return distance;
+
+  int tinggiAir = distance;
+  float volumeAir = ((43-tinggiAir)/43)*100;
+
+  if (lembab < 30){
+    digitalWrite(pump,HIGH);
+    Firebase.setString(fbdo,"/monitor/data/status_pompa","ON");
+    Firebase.setInt(fbdo,"/monitor/data/Kelembaban",lembab);
+    Firebase.setInt(fbdo,"/monitor/data/Suhu",t);
+    Firebase.setInt(fbdo,"/monitor/data/Udara",h);
+    Firebase.setInt(fbdo,"/monitor/data/level_air",tinggiAir);
+    Serial.println(tinggiAir);
+  }else{
+    digitalWrite(pump,LOW);
+    Firebase.setString(fbdo,"/monitor/data/status_pompa","OFF");
+    Firebase.setInt(fbdo,"/monitor/data/Kelembaban",lembab);
+    Firebase.setInt(fbdo,"/monitor/data/Suhu",t);
+    Firebase.setInt(fbdo,"/monitor/data/Udara",h);
+    Firebase.setInt(fbdo,"/monitor/data/level_air",tinggiAir); 
+    Serial.println(tinggiAir);
+
+  }
+  }
 }
+
